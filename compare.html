@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: rgb(18, 3, 38);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Stock</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item selected">
+                        <a class="nav-link" aria-current="page" href="Stock.html">Home</a>
+                    </li>
+                    <li class="nav-item selected">
+                        <a class="nav-link active" aria-current="page" href="compare.html">Compare</a>
+                    </li>
+                    <li class="nav-item selected">
+                        <a class="nav-link" aria-current="page" href="index.html">Logout</a>
+                    </li>
+                </ul>
+                <form class="d-flex" role="search">
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <br>
+        <br>
+        <div class="row">
+            <div class="col-md-4">
+                <br>
+                <select class="form-select" id="symbol_select" aria-label="Default select example">
+                    <option selected>Open this select menu</option>
+                    <option selected value="AAPL">AAPL</option>
+                    <option value="MSFT">MSFT</option>
+                    <option value="GOOGL">GOOGL</option>
+                    <option value="LULU">LULU</option>
+                    <option value="TM">TM</option>
+                    <option value="TSLA">TSLA</option>
+                    <option value="NVDA">NVDA</option>
+                    <option value="RBLX">RBLX</option>
+                    <option value="AMZN">AMZN</option>
+                    <option value="FB">FB</option>
+                    <option value="NFLX">NFLX</option>
+                    <option value=" INTC"> INTC</option>
+                    <option value="IBM">IBM</option>
+                    <option value="PYPL">PYPL</option>
+                    <option value="JPM">JPM</option>
+                    <option value="DIS">DIS</option>
+                    <option value="CSCO">CSCO</option>
+                    <option value="BA">BA</option>
+                    <option value="GE">GE</option>
+                    <option value="KO">KO</option>
+
+                </select>
+            </div>
+            <div class="col-md-8">
+                <canvas id="stockChart" width="800" height="400"></canvas>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <br>
+                <select class="form-select" id="symbol_select2" aria-label="Default select example">
+                    <option selected>Open this select menu</option>
+                    <option value="MSFT">MSFT</option>
+                    <option value="GOOGL">GOOGL</option>
+                    <option value="LULU">LULU</option>
+                    <option value="TM">TM</option>
+                    <option value="TSLA">TSLA</option>
+                    <option value="NVDA">NVDA</option>
+                    <option value="RBLX">RBLX</option>
+                    <option value="AMZN">AMZN</option>
+                    <option value="FB">FB</option>
+                    <option value="NFLX">NFLX</option>
+                    <option value=" INTC"> INTC</option>
+                    <option value="IBM">IBM</option>
+                    <option value="PYPL">PYPL</option>
+                    <option value="JPM">JPM</option>
+                    <option value="DIS">DIS</option>
+                    <option value="CSCO">CSCO</option>
+                    <option value="BA">BA</option>
+                    <option value="GE">GE</option>
+                    <option value="KO">KO</option>
+                </select>
+            </div>
+            <div class="col-md-8">
+                <canvas id="stockChart2" width="800" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+        integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+        crossorigin="anonymous"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Define the canvas element for chart rendering
+            const stockChart = document.getElementById("stockChart");
+
+            // Function to format today's date
+            function getFormattedDate() {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+                const day = String(today.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            // Function to fetch stock data from Polygon API for a single company
+            async function fetchStockData(symbol) {
+                const apiKey = 'YOUR_API_KEY';
+                const symboll = $('#symbol_select').val();
+                const todayDate = getFormattedDate();
+                const apiUrl = `https://api.polygon.io/v2/aggs/ticker/${symboll}/range/1/day/2020-01-09/${todayDate}?apiKey=PFpWTq1SprYxmUBuJKsxarO8OFnxasLS`;
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                return data;
+            }
+
+            // Main function to orchestrate the process
+            async function main() {
+                try {
+                    // Get the existing chart instance if it exists
+                    const existingChart = Chart.getChart(stockChart);
+
+                    // If an existing chart instance is found, destroy it
+                    if (existingChart) {
+                        existingChart.destroy();
+                    }
+
+                    // Fetch data and render the new chart
+                    const symboll = $('#symbol_select').val();
+                    const symbol = symboll; // Example: Apple Inc.
+                    const companyData = await fetchStockData(symbol);
+                    const openingPrices = companyData.results.map(entry => entry.o);
+                    const closingPrices = companyData.results.map(entry => entry.c);
+
+                    const ctx = stockChart.getContext("2d");
+                    new Chart(ctx, {
+                        type: "scatter",
+                        data: {
+                            datasets: [{
+                                label: `${symbol} Stock Prices`,
+                                data: openingPrices.map((openingPrice, index) => ({ x: openingPrice, y: closingPrices[index] })),
+                                backgroundColor: "rgba(0, 123, 255, 0.6)",
+                                borderColor: "#007bff",
+                                pointRadius: 5,
+                                pointHoverRadius: 8,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: "Opening Price",
+                                    },
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: "Closing Price",
+                                    },
+                                },
+                            },
+                        },
+                    });
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+
+            // Call the main function when the document is ready
+            main();
+
+            // Event listener for changes in symbol selection
+            $('#symbol_select').on('change', function () {
+                main();
+            });
+        });
+    </script>
+
+<script>
+    $(document).ready(function () {
+        // Define the canvas element for chart rendering
+        const stockChart2 = document.getElementById("stockChart2");
+
+        // Function to format today's date
+        function getFormattedDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Function to fetch stock data from Polygon API for a single company
+        async function fetchStockData(symbol) {
+            const apiKey = 'YOUR_API_KEY';
+            const symboll2 = $('#symbol_select2').val();
+            const todayDate = getFormattedDate();
+            const apiUrl = `https://api.polygon.io/v2/aggs/ticker/${symboll2}/range/1/day/2020-01-09/${todayDate}?apiKey=PFpWTq1SprYxmUBuJKsxarO8OFnxasLS`;
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            return data;
+        }
+
+        // Main function to orchestrate the process
+        async function main2() {
+            try {
+                // Get the existing chart instance if it exists
+                const existingChart2 = Chart.getChart(stockChart2);
+
+                // If an existing chart instance is found, destroy it
+                if (existingChart2) {
+                    existingChart2.destroy();
+                }
+
+                // Fetch data and render the new chart
+                const symboll2 = $('#symbol_select2').val();
+                const symbol2 = symboll2; // Example: Apple Inc.
+                const companyData2 = await fetchStockData(symbol2);
+                const openingPrices2 = companyData2.results.map(entry => entry.o);
+                const closingPrices2 = companyData2.results.map(entry => entry.c);
+
+                const ctx2 = stockChart2.getContext("2d");
+                new Chart(ctx2, {
+                    type: "scatter",
+                    data: {
+                        datasets: [{
+                            label: `${symbol2} Stock Prices`,
+                            data: openingPrices2.map((openingPrice2, index2) => ({ x: openingPrice2, y: closingPrices2[index2] })),
+                            backgroundColor: "rgba(0, 123, 255, 0.6)",
+                            borderColor: "#007bff",
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: "Opening Price",
+                                },
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: "Closing Price",
+                                },
+                            },
+                        },
+                    },
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Call the main function when the document is ready
+        main2();
+
+        // Event listener for changes in symbol selection
+        $('#symbol_select2').on('change', function () {
+            main2();
+        });
+    });
+</script>
+</body>
+
+</html>
